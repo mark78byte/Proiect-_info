@@ -1,0 +1,447 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <iomanip>
+
+#define BOLD        "\033[1m"
+#define BLINK       "\033[5m"
+#define DIM         "\033[2m"
+
+#define CYAN    "\033[36m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define BLUE        "\033[34m"
+#define WHITE       "\033[37m"
+#define PINK    "\033[38;5;200m"
+
+#define RESET   "\033[0m"
+
+using namespace std;
+
+struct Masina {
+    char numar_masina[21];
+    char nume_proprietar[31];
+    char marca[21];
+} masini[1000];
+
+struct Reparatie {
+    int cod_reparatie;
+    char numar_masina[21];
+    char data[15];
+    float cost_reparatie;
+} reparatii[1000];
+
+int nr_masini = 0, nr_reparatii = 0;
+
+void incarcare_date();
+void completeaza_date();
+void salveaza_date();
+void afiseaza_date();
+void afiseaza_reparatii();
+void afiseaza_fara_reparatii();
+void adauga_masina();
+void adauga_reparatie();
+void echipa();
+int meniu();
+void the_end();
+
+int main() {
+    int optiune;
+    do {
+        optiune = meniu();
+        switch (optiune) {
+            case 1:  incarcare_date();          break;
+            case 2:  salveaza_date();           break;
+            case 3:  afiseaza_date();           break;
+            case 4:  afiseaza_reparatii();      break;
+            case 5:  afiseaza_fara_reparatii(); break;
+            case 6:  completeaza_date();        break;
+            case 7:  adauga_masina();           break;
+            case 8:  adauga_reparatie();        break;
+            case 9:  echipa();                  break;
+            case 10: the_end(); return 0;
+        }
+    } while (optiune != 10);
+
+    return 0;
+}
+
+int meniu() {
+    cout << endl;
+    cout << BLINK << BOLD << PINK;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #      Echipa_6        #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << RESET;
+    cout << endl;
+    cout << "[1] Incarca date din fisier" << endl;
+    cout << "[2] Salveaza date in fisier" << endl;
+    cout << "[3] Afiseaza toate datele" << endl;
+    cout << "[4] Afiseaza reparatii pentru fiecare masina" << endl;
+    cout << "[5] Afiseaza masinile fara reparatii" << endl;
+    cout << "[6] Adauga Masini si reparatii manual" << endl;
+    cout << "[7] Adauga o masina" << endl;
+    cout << "[8] Adauga o reparatie" << endl;
+    cout << "[9] Echipa" << endl;
+    cout << "[10] Iesire" << endl;
+    cout << "Alege o optiune: ";
+
+    int opt;
+    cin >> opt;
+    return opt;
+}
+
+void echipa() {
+    cout<< BOLD << CYAN;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #      Echipa_6        #" << endl;
+    cout << " #    Subiectul 30      #" << endl;
+    cout << " #  David - Programator #" << endl;
+    cout << " #  Alex - Programator  #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << RESET;
+
+    cout << endl;
+
+}
+
+void incarcare_date() {
+    ifstream fisier("grupa_6.in");
+    if (!fisier) {
+            cout << RED << BOLD;
+            cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+            cout << " # Eroare la deschiderea fisierului grupa_6.in #" << endl;
+            cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+            cout << RESET;
+        return;
+    }
+    fisier >> nr_masini >> nr_reparatii;
+
+    for (int i = 0; i < nr_masini; ++i) {
+        fisier >> masini[i].numar_masina
+               >> masini[i].nume_proprietar
+               >> masini[i].marca;
+    }
+
+    for (int i = 0; i < nr_reparatii; ++i) {
+        fisier >> reparatii[i].cod_reparatie
+               >> reparatii[i].numar_masina
+               >> reparatii[i].data
+               >> reparatii[i].cost_reparatie;
+    }
+
+    fisier.close();
+     cout << GREEN << BOLD;
+     cout <<" #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+     cout <<" # Datele au fost incarcate cu succes. #" << endl;
+     cout <<" #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+     cout << RESET;
+}
+bool masina_exista(const char* numar_masina) {
+    for (int i = 0; i < nr_masini; ++i) {
+        if (strcmp(masini[i].numar_masina, numar_masina) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int gaseste_masina(const char* numar_masina) {
+    for (int i = 0; i < nr_masini; ++i) {
+        if (strcmp(masini[i].numar_masina, numar_masina) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void numere_inmatriculare_mari(char nr_inmatriculare[])
+{
+    for(int i=0;i<strlen(nr_inmatriculare);i++)
+            if(nr_inmatriculare[i]>='a' && nr_inmatriculare[i]<='z')
+                nr_inmatriculare[i]-=32;
+}
+
+void completeaza_date() {
+    cout<<endl;
+    cout << "Introdu numarul de masini pe care vrei sa le inregistrezi: ";
+    cin >> nr_masini;
+
+    char nr_inmatriculare[21];
+
+    for (int i = 0; i < nr_masini; i++) {
+        cout << "Numarul de inmatriculare al masinii: ";
+        cin >> nr_inmatriculare;
+        numere_inmatriculare_mari(nr_inmatriculare);
+
+        int index = gaseste_masina(nr_inmatriculare);
+        if (index != -1) {
+            strcpy(masini[i].numar_masina, masini[index].numar_masina);
+            strcpy(masini[i].nume_proprietar, masini[index].nume_proprietar);
+            strcpy(masini[i].marca, masini[index].marca);
+
+             cout << RED << "Masina deja exista in baza de date. Datele vor fi completate automat." << endl;
+             cout << RESET;
+        } else {
+            strcpy(masini[i].numar_masina, nr_inmatriculare);
+
+            cout << "Numele proprietarului: ";
+            cin >> masini[i].nume_proprietar;
+
+            cout << "Marca: ";
+            cin >> masini[i].marca;
+        }
+    }
+    int nr;
+    cout << "Introdu numarul de reparatii efectuate: ";
+    cin >> nr;
+
+    cout << "Ai introdus un numar de "<< nr << " ce se vor efectua"<<
+            " pe masina cu numarul de inmatriculare "<< nr_inmatriculare <<endl;
+
+    for (int i = 1; i <= nr; ++i) {
+        cout << BOLD << CYAN;
+        cout << "#~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+        cout << "# Numarul reparatiei "<< i <<" #"<<endl;
+        cout << "#~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+        cout << RESET;
+        cout << "Codul acestei operatii este "<< ++nr_reparatii <<endl;
+
+
+        cout << "Data efectuarii reparatiei: ";
+        cin >> reparatii[i].data;
+
+        cout << "Cost: ";
+        cin >> reparatii[i].cost_reparatie;
+    }
+    cout << GREEN << BOLD;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " # Datele au fost completate cu succes. #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << RESET;
+}
+
+void salveaza_date() {
+    ofstream fisier("grupa_6.out");
+    if (!fisier) {
+            cout << BOLD << RED;
+            cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+            cout << " # Eroare la deschiderea fisierului grupa_6.out #" << endl;
+            cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+            cout << RESET;
+        return;
+    }
+
+    fisier << nr_masini << ' ' << nr_reparatii << '\n';
+
+    for (int i = 0; i < nr_masini; i++) {
+        fisier << masini[i].numar_masina << ' '
+               << masini[i].nume_proprietar << ' '
+               << masini[i].marca << '\n';
+    }
+
+    for (int i = 0; i < nr_reparatii; i++) {
+        fisier << reparatii[i].cod_reparatie << ' '
+               << reparatii[i].numar_masina << ' '
+               << reparatii[i].data << ' '
+               << reparatii[i].cost_reparatie << '\n';
+    }
+
+    fisier.close();
+    cout << BOLD << GREEN;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " # Datele au fost salvate cu succes. #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << RESET;
+}
+
+void afiseaza_date() {
+    cout << " #~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #  BAZA DE DATE  #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~#" << endl << endl;
+
+    cout << " #~~~~~~~~#" << endl;
+    cout << " # Masini #" << endl;
+    cout << " #~~~~~~~~#" << endl;
+
+    cout << " #~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " # Numar Inmatriculare #" << "   Nume Proprietar   #" << "    Marca Masinii    #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    for (int i = 0; i < nr_masini; ++i) {
+        cout << left
+             << "#  " << setw(20) << masini[i].numar_masina
+             << "#  " << setw(20) << masini[i].nume_proprietar
+             << "#  " << setw(20) << masini[i].marca
+             << "#" << endl;
+    }
+    cout << " #~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    cout << "\n #~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #       REPARATII        #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    cout << " #~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #   Codul Reparatiei  #" << " Numar Inmatriculare #" << "   Data Reparatiei   #" << "  Costul reparatiei  #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    for (int i = 0; i < nr_reparatii; ++i) {
+        cout << left
+             << "#  " << setw(20) <<reparatii[i].cod_reparatie
+             << "#  " << setw(20) <<reparatii[i].numar_masina
+             << "#  " << setw(20) << reparatii[i].data
+             << "#  " << setw(20) << reparatii[i].cost_reparatie
+             << "# " << endl;
+    }
+    cout <<" #~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#" << "~~~~~~~~~~~~~~~~~~~~~#"  <<"~~~~~~~~~~~~~~~~~~~~~#" << endl;
+}
+
+
+void afiseaza_reparatii() {
+
+    cout<<"\n!!!!!!!!!!!Trebuie facut tabel ca si la afiseaza_date!!!!!!!!!!!!\n\n";
+
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " # REPARATII PE MASINI  #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    for (int i = 0; i < nr_masini; ++i) {
+        cout << "Reparatii pentru masina: " << masini[i].numar_masina << endl;
+        for (int j = 0; j < nr_reparatii; ++j) {
+            if (strcmp(masini[i].numar_masina, reparatii[j].numar_masina) == 0) {
+                cout << "Cod: " << reparatii[j].cod_reparatie
+                     << ", Data: " << reparatii[j].data
+                     << ", Cost: " << reparatii[j].cost_reparatie << endl;
+            }
+        }
+        cout << endl;
+    }
+}
+
+void afiseaza_fara_reparatii() {
+
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " # MASINI FARA NICIO REPARATIE     #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    cout<<"\n!!!!!!!!!!!Trebuie facut tabel ca si la afiseaza_date!!!!!!!!!!!!\n\n";
+
+    for (int i = 0; i < nr_masini; ++i) {
+        bool are_reparatii = false;
+        for (int j = 0; j < nr_reparatii; ++j) {
+            if (strcmp(masini[i].numar_masina, reparatii[j].numar_masina) == 0) {
+                are_reparatii = true;
+                break;
+            }
+        }
+        if (!are_reparatii) {
+            cout << masini[i].numar_masina << " "
+                 << masini[i].nume_proprietar << " "
+                 << masini[i].marca << endl;
+        }
+    }
+    cout << endl;
+}
+
+void adauga_masina() {
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #   ADAUGA O MASINA    #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    char numar_masina[21];
+    char optiune;
+
+    do {
+        cout << "Numar masina: ";
+        cin >> numar_masina;
+        numere_inmatriculare_mari(numar_masina);
+
+        if (masina_exista(numar_masina)) {
+            cout << BOLD << RED;
+            cout << "Masina cu acest numar exista deja in baza de date." << endl;
+            cout << RESET;
+            cout << "Doriti sa introduceti un alt numar? (d/n): ";
+            cin >> optiune;
+        } else {
+            strcpy(masini[nr_masini].numar_masina, numar_masina);
+
+            cout << "Nume proprietar: ";
+            cin >> masini[nr_masini].nume_proprietar;
+
+            cout << "Marca: ";
+            cin >> masini[nr_masini].marca;
+
+            nr_masini++;
+            cout << BOLD << GREEN;
+            cout << "Masina a fost adaugata cu succes." << endl;
+            cout << RESET;
+            cout << endl;
+            return;
+        }
+    } while (optiune == 'd' || optiune == 'D' );
+    cout << RED << BOLD;
+    cout << "Adaugarea masinii a fost anulata." << endl;
+    cout << RESET;
+    cout << endl;
+}
+
+
+void adauga_reparatie() {
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #   ADAUGA O REPARATIE    #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+
+    cout << "Codul acestei operatii este " << ++nr_reparatii << endl;
+    reparatii[nr_reparatii - 1].cod_reparatie = nr_reparatii;
+
+    cout << "Numar masina: ";
+    cin >> reparatii[nr_reparatii - 1].numar_masina;
+    numere_inmatriculare_mari(reparatii[nr_reparatii - 1].numar_masina);
+
+    if (!masina_exista(reparatii[nr_reparatii - 1].numar_masina)) {
+        char optiune;
+        cout << RED << BOLD;
+        cout << "Masina nu exista in baza de date." << endl;
+        cout << RESET;
+        cout << "Doriti sa adaugati masina in baza de date? (d/n): ";
+        cin >> optiune;
+
+        if (optiune == 'd' || optiune == 'D') {
+            adauga_masina();
+        } else {
+            cout << RED << BOLD;
+            cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+            cout << " # Adaugarea reparatiei a fost anulata. #" << endl;
+            cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+            cout << RESET;
+            return;
+        }
+    }
+
+    cout << "Data: ";
+    cin >> reparatii[nr_reparatii - 1].data;
+
+    cout << "Cost: ";
+    cin >> reparatii[nr_reparatii - 1].cost_reparatie;
+
+    cout << GREEN << BOLD;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " # Reparatia a fost adaugata cu succes. #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << RESET;
+    cout << endl;
+}
+
+
+
+void the_end()
+{
+    cout << BOLD << CYAN << BLINK;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << " #  Multumim ca ati utilizat    #" << endl;
+    cout << " #      aplicatia Echipa_6!     #" << endl;
+    cout << " #         La revedere!         #" << endl;
+    cout << " #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#" << endl;
+    cout << RESET ;
+}
+
